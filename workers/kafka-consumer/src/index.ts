@@ -9,7 +9,7 @@ import {
 
 loadEnv();
 
-const KAFKA_BROKERS = (process.env.KAFKA_BROKERS ?? 'localhost:9093').split(',');
+const KAFKA_BROKERS = (process.env.KAFKA_BROKERS ?? 'localhost:9092').split(',');
 const DEAL_TOPIC = process.env.KAFKA_DEAL_TOPIC ?? 'deals.raw';
 const CONSUMER_GROUP = process.env.KAFKA_CONSUMER_GROUP ?? 'tripstreamer-kafka-consumer';
 const PRICE_THRESHOLD = Number(process.env.MAX_ALERT_PRICE ?? 500);

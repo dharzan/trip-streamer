@@ -4,7 +4,7 @@ import { randomUUID } from 'crypto';
 
 loadEnv();
 
-const KAFKA_BROKERS = (process.env.KAFKA_BROKERS ?? 'localhost:9093').split(',');
+const KAFKA_BROKERS = (process.env.KAFKA_BROKERS ?? 'localhost:9092').split(',');
 const DEAL_TOPIC = process.env.KAFKA_DEAL_TOPIC ?? 'deals.raw';
 const PRODUCE_INTERVAL_MS = Number(process.env.PRODUCE_INTERVAL_MS ?? 3000);
 

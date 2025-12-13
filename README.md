@@ -70,7 +70,7 @@ Use `pnpm infra:down` to tear everything down (including persistent volumes).
 - Use Redis to debounce re-embedding or schedule periodic refresh jobs so the RAG store stays current.
 
 ## Environment
-- Kafka broker: `localhost:9093`
+- Kafka broker: `localhost:9092`
 - LocalStack SQS: `http://localhost:4566` with queue `deals-alerts`
 - Postgres: `postgres://tripstreamer:tripstreamer@localhost:5432/tripstreamer`
 - Redis: `redis://localhost:6379`
