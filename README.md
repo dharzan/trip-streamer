@@ -6,7 +6,7 @@ Everything lives inside a pnpm workspace so infra, services, and tests can be or
 
 ## Tech Stack
 - TypeScript / Node.js
-- Kafka (docker)
+- Kafka / Redpanda (docker)
 - LocalStack SQS (docker)
 - Postgres (preferred over SQLite)
 - GraphQL (Apollo Server)
@@ -35,6 +35,7 @@ Everything lives inside a pnpm workspace so infra, services, and tests can be or
    - Kafka consumer: `pnpm dev:kafka-consumer`
    - SQS worker: `pnpm dev:sqs-worker`
    - Backend API: `pnpm dev:backend`
+   - Frontend: `pnpm dev:frontend` (loads Vite dev server on port 5173)
 5. Visit the Apollo Server URL printed in the console to run the GraphQL playground (query `activeDeals` to see cached deals).
 
 Use `pnpm infra:down` to tear everything down (including persistent volumes).
@@ -44,7 +45,7 @@ Use `pnpm infra:down` to tear everything down (including persistent volumes).
 - `workers/kafka-producer`: publishes randomized deals to Kafka.
 - `workers/kafka-consumer`: filters Kafka deals and forwards eligible ones to SQS.
 - `workers/sqs-worker`: consumes SQS, persists to Postgres, manages Redis cache + stats.
-- `frontend/`: React + Apollo Client app (to be implemented).
+- `frontend/`: React + Apollo Client app powered by Vite + Apollo Client.
 - `e2e/`: Jest/Playwright tests (to be implemented).
 
 ## Root Scripts
@@ -76,3 +77,7 @@ Use `pnpm infra:down` to tear everything down (including persistent volumes).
 - Redis: `redis://localhost:6379`
 
 Override any of these via `.env` files inside each service if needed.
+
+### Frontend configuration
+- `VITE_GRAPHQL_URL` (default `http://localhost:4000/`) controls which backend endpoint the React app hits.
+- Set it in `frontend/.env` when pointing the UI at a remote backend, e.g. `VITE_GRAPHQL_URL=https://staging.example.com/graphql`.
