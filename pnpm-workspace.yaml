@@ -1,0 +1,5 @@
+packages:
+  - 'backend'
+  - 'workers/*'
+  - 'frontend'
+  - 'e2e'

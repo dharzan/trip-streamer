@@ -1,0 +1,8 @@
+{
+  "name": "frontend",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "dev": "node -e \"console.log('Frontend dev server not implemented yet. Coming soon.')\""
+  }
+}

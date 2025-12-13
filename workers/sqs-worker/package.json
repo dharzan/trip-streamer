@@ -1,0 +1,25 @@
+{
+  "name": "sqs-worker",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Processes SQS deal events, persists to Postgres, updates Redis cache",
+  "type": "commonjs",
+  "main": "dist/index.js",
+  "license": "UNLICENSED",
+  "scripts": {
+    "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@aws-sdk/client-sqs": "^3.671.0",
+    "dotenv": "^16.4.5",
+    "ioredis": "^5.4.1",
+    "pg": "^8.16.3"
+  },
+  "devDependencies": {
+    "@types/node": "^25.0.1",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.9.3"
+  }
+}

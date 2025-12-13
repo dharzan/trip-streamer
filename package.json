@@ -1,0 +1,17 @@
+{
+  "name": "trip-streamer",
+  "private": true,
+  "version": "0.1.0",
+  "description": "TripStreamer monorepo",
+  "scripts": {
+    "infra:up": "docker-compose up -d",
+    "infra:down": "docker-compose down -v",
+    "dev:backend": "pnpm --filter backend dev",
+    "dev:kafka-producer": "pnpm --filter kafka-producer dev",
+    "dev:kafka-consumer": "pnpm --filter kafka-consumer dev",
+    "dev:sqs-worker": "pnpm --filter sqs-worker dev",
+    "dev:frontend": "pnpm --filter frontend dev",
+    "test:e2e": "pnpm --filter e2e test"
+  },
+  "packageManager": "pnpm@9.12.0"
+}
