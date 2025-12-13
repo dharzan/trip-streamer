@@ -12,7 +12,12 @@
     "dev:sqs-worker": "pnpm --filter sqs-worker dev",
     "dev:frontend": "pnpm --filter frontend dev",
     "dev:rag-assistant": "pnpm --filter rag-assistant dev",
+    "dev:services": "concurrently --kill-others-on-fail --names \"backend,kafka-producer,kafka-consumer,sqs-worker,frontend,rag\" \"pnpm dev:backend\" \"pnpm dev:kafka-producer\" \"pnpm dev:kafka-consumer\" \"pnpm dev:sqs-worker\" \"pnpm dev:frontend\" \"pnpm dev:rag-assistant\"",
+    "dev:stack": "pnpm infra:up && pnpm dev:services",
     "test:e2e": "pnpm --filter e2e test"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.1"
   },
   "packageManager": "pnpm@9.12.0"
 }

@@ -85,7 +85,12 @@ Override any of these via `.env` files inside each service if needed.
 
 ### Frontend configuration
 - `VITE_GRAPHQL_URL` (default `http://localhost:4000/`) controls which backend endpoint the React app hits.
-- Set it in `frontend/.env` when pointing the UI at a remote backend, e.g. `VITE_GRAPHQL_URL=https://staging.example.com/graphql`.
+- `VITE_RAG_URL` (default `http://localhost:7070`) controls which RAG assistant endpoint the UI uses for insights.
+- Set them in `frontend/.env` when pointing the UI at remote services, e.g.:
+  ```
+  VITE_GRAPHQL_URL=https://staging.example.com/graphql
+  VITE_RAG_URL=https://rag.example.com
+  ```
 
 ### RAG assistant configuration
 - `RAG_PORT` (default `7070`) sets the listening port.

@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useQuery } from '@apollo/client';
 import { ActiveDealsDocument, Deal } from './graphql/deals';
+import { queryRag, RagQueryResponse } from './services/ragClient';
 
 interface Filters {
   destination: string;
@@ -26,12 +27,36 @@ export default function App() {
     variables,
     notifyOnNetworkStatusChange: true,
   });
+  const [insightPrompt, setInsightPrompt] = useState('What are the best deals today?');
+  const [insightResult, setInsightResult] = useState<RagQueryResponse | null>(null);
+  const [insightLoading, setInsightLoading] = useState(false);
+  const [insightError, setInsightError] = useState<string | null>(null);
 
   const deals = data?.activeDeals ?? [];
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     void refetch(variables);
+  };
+
+  const handleInsightRequest = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const prompt = insightPrompt.trim();
+    if (!prompt) {
+      setInsightError('Enter a question to fetch insights.');
+      return;
+    }
+
+    setInsightLoading(true);
+    setInsightError(null);
+    try {
+      const result = await queryRag(prompt);
+      setInsightResult(result);
+    } catch (ragError) {
+      setInsightError(ragError instanceof Error ? ragError.message : 'Failed to fetch insights');
+    } finally {
+      setInsightLoading(false);
+    }
   };
 
   return (
@@ -93,6 +118,44 @@ export default function App() {
             </li>
           ))}
         </ul>
+      </section>
+
+      <section className="insights">
+        <div className="insights-header">
+          <h2>AI Insights</h2>
+          <p>Ask questions powered by the RAG assistant (e.g., “What are the hottest SYD deals under $400?”).</p>
+        </div>
+        <form onSubmit={handleInsightRequest} className="insights-form">
+          <textarea
+            value={insightPrompt}
+            onChange={(event) => setInsightPrompt(event.target.value)}
+            placeholder="Ask about destinations, price caps, or recent trends"
+            rows={3}
+          />
+          <button type="submit" disabled={insightLoading}>
+            {insightLoading ? 'Fetching insights...' : 'Ask'}
+          </button>
+        </form>
+        {insightError && <p className="error">{insightError}</p>}
+        {insightResult && (
+          <div className="insights-result">
+            <h3>Suggested context</h3>
+            <pre>{insightResult.synthesizedResponse}</pre>
+
+            {insightResult.matches.length > 0 && (
+              <>
+                <h4>Top matches</h4>
+                <ul>
+                  {insightResult.matches.map((match) => (
+                    <li key={match.id}>
+                      <strong>{match.source}</strong> ({match.score.toFixed(2)}): {match.text}
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
+          </div>
+        )}
       </section>
     </div>
   );
