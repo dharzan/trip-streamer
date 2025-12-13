@@ -11,6 +11,7 @@
     "dev:kafka-consumer": "pnpm --filter kafka-consumer dev",
     "dev:sqs-worker": "pnpm --filter sqs-worker dev",
     "dev:frontend": "pnpm --filter frontend dev",
+    "dev:rag-assistant": "pnpm --filter rag-assistant dev",
     "test:e2e": "pnpm --filter e2e test"
   },
   "packageManager": "pnpm@9.12.0"

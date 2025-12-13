@@ -8,6 +8,7 @@ import {
 } from '@aws-sdk/client-sqs';
 import Redis from 'ioredis';
 import { Pool } from 'pg';
+import fetch from 'node-fetch';
 
 loadEnv();
 
@@ -30,6 +31,7 @@ const pool = new Pool({
 });
 
 const redis = new Redis(process.env.REDIS_URL ?? 'redis://localhost:6379');
+const ragServiceUrl = process.env.RAG_SERVICE_URL ?? 'http://localhost:7070';
 
 interface DealEvent {
   id: string;
@@ -93,6 +95,33 @@ async function updateStats(destination: string) {
   );
 }
 
+async function notifyRagService(deal: DealEvent) {
+  try {
+    const response = await fetch(`${ragServiceUrl}/api/documents`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        source: `deal:${deal.destination}`,
+        text: `Deal ${deal.id} to ${deal.destination} for $${deal.price} via ${deal.airline} on ${deal.createdAt}`,
+        metadata: {
+          type: 'deal',
+          destination: deal.destination,
+          price: deal.price,
+          airline: deal.airline,
+          createdAt: deal.createdAt,
+        },
+      }),
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      console.warn('[sqs-worker] RAG service rejected document', errText);
+    }
+  } catch (error) {
+    console.warn('[sqs-worker] Failed to notify RAG service', error);
+  }
+}
+
 async function handleMessage(queueUrl: string, body: DealMessageBody, receiptHandle: string) {
   const idKey = `event:processed:${body.eventId}`;
   const alreadyProcessed = await redis.get(idKey);
@@ -103,6 +132,7 @@ async function handleMessage(queueUrl: string, body: DealMessageBody, receiptHan
     await redis.set(idKey, '1', 'EX', Number(process.env.EVENT_TTL_SECONDS ?? 86400));
     await redis.del('cache:deals:active');
     await updateStats(body.deal.destination);
+    await notifyRagService(body.deal);
     console.log(`[sqs-worker] Persisted deal ${body.deal.id}`);
   }
 
