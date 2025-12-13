@@ -2,6 +2,11 @@
 import { gql } from 'apollo-server';
 
 export const typeDefs = gql`
+  enum DealSort {
+    NEWEST
+    PRICE_ASC
+  }
+
   type Deal {
     id: ID!
     destination: String!
@@ -11,7 +16,7 @@ export const typeDefs = gql`
   }
 
   type Query {
-    activeDeals(destination: String, maxPrice: Float): [Deal!]!
+    activeDeals(destination: String, maxPrice: Float, sortBy: DealSort): [Deal!]!
     deal(id: ID!): Deal
   }
 

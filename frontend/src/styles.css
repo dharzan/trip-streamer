@@ -37,7 +37,8 @@ header {
   flex: 1;
 }
 
-.filters input {
+.filters input,
+.filters select {
   margin-top: 0.35rem;
   padding: 0.5rem;
   border: 1px solid #d9d9d9;

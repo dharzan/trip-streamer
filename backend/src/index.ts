@@ -4,9 +4,12 @@ import { appConfig } from './config';
 import { dbPool, ensureSchema, DealRow } from './db';
 import { redis } from './redis';
 
+type DealSort = 'NEWEST' | 'PRICE_ASC';
+
 interface ActiveDealsArgs {
   destination?: string | null;
   maxPrice?: number | null;
+  sortBy?: DealSort | null;
 }
 
 interface DealResult {
@@ -51,7 +54,12 @@ async function fetchActiveDeals(args: ActiveDealsArgs): Promise<DealResult[]> {
   }
 
   const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
-  const query = `SELECT id, destination, price, airline, created_at FROM deals ${whereClause} ORDER BY created_at DESC LIMIT 50`;
+  const sortBy: DealSort = args.sortBy ?? 'NEWEST';
+  const orderClause =
+    sortBy === 'PRICE_ASC'
+      ? 'ORDER BY price ASC, created_at DESC'
+      : 'ORDER BY created_at DESC';
+  const query = `SELECT id, destination, price, airline, created_at FROM deals ${whereClause} ${orderClause} LIMIT 50`;
 
   const result = await dbPool.query<DealRow>(query, values);
   return result.rows.map(mapDeal);
