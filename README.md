@@ -39,8 +39,6 @@ Everything lives inside a pnpm workspace so infra, services, and tests can be or
 
 Use `pnpm infra:down` to tear everything down (including persistent volumes).
 
-> **Note:** pnpm isn't available in this environment, so dependency installation and runtime checks still need to happen on your machine. Once you run `pnpm install`, commit the generated `pnpm-lock.yaml`.
-
 ## Workspace Layout
 - `backend/`: Apollo Server GraphQL API (TypeScript).
 - `workers/kafka-producer`: publishes randomized deals to Kafka.
