@@ -1,8 +1,13 @@
 FROM node:20-alpine AS build
 WORKDIR /app
 
+# Ensure dev dependencies (like TypeScript) are installed in this stage.
+ENV NODE_ENV=development \
+    NPM_CONFIG_PRODUCTION=false \
+    NPM_CONFIG_PACKAGE_LOCK=false
+
 COPY backend/package*.json ./
-RUN npm install
+RUN npm install --include=dev && npx tsc --version
 COPY backend/tsconfig.json ./tsconfig.json
 COPY backend/src ./src
 RUN npm run build

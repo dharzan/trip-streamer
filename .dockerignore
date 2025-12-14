@@ -1,0 +1,16 @@
+.git
+.github
+.localstack
+node_modules
+**/node_modules
+dist
+frontend/dist
+backend/dist
+e2e/videos
+e2e/screenshots
+npm-debug.log
+yarn-error.log
+pnpm-debug.log
+coverage
+*.pem
+*.key
