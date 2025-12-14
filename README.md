@@ -68,6 +68,30 @@ Use `pnpm infra:down` to tear everything down (including persistent volumes).
 2. Ensure the backend boots via pnpm.
 3. Implement workers, UI, and Jest/Playwright tests once infra is stable.
 
+## Why each service has a Dockerfile
+Each service in this monorepo includes a small `Dockerfile` so it can be built and run as a container independently. The main reasons:
+
+- **Reproducible environments:** containers ensure the same Node/OS deps across machines and CI.
+- **Orchestration-ready:** docker images are easy to plug into `docker-compose` or Kubernetes for local infra and production.
+- **Isolated dependencies:** each service can declare its own runtime, build steps, and system packages without affecting others.
+- **CI/CD and image publishing:** Dockerfiles let CI build lightweight images for integration tests or deployment.
+- **Local parity with infra:** running services as containers matches how infra (Kafka, Postgres, Redis) runs in `pnpm infra:up`.
+
+You can still run services locally with `pnpm dev:<service>` for an editable dev loop; the Dockerfiles exist to make containerized runs simple and consistent when needed.
+
+### Images, builds and a quick example
+Each `Dockerfile` builds a single Docker image for its service (one image per service). Use `docker build` (or `docker-compose` / `pnpm` scripts) to create the image and `docker run` to start a container from it. Example for the backend:
+
+```bash
+# build an image for the backend
+docker build -f backend/Dockerfile -t tripstreamer-backend:local .
+
+# run it locally (maps container port 4000 to localhost)
+docker run --rm -p 4000:4000 tripstreamer-backend:local
+```
+
+Note: many service Dockerfiles in this repo use multi-stage builds (the `backend/Dockerfile` is an example). The build stage installs deps and compiles TypeScript, and the final image contains only the runtime artifacts (smaller, faster to start, and safer for production).
+
 ## RAG Copilot
 - `services/rag-assistant/` hosts an Express API on port 7070 that stores embeddings (simple hashed vectors) in Postgres and runs cosine similarity search in memory.
 - `POST /api/documents` ingests or updates snippets; the SQS worker automatically pushes every persisted deal as a short summary so the store stays in sync with new events.
