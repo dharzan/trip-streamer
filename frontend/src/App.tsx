@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useQuery } from '@apollo/client';
-import { ActiveDealsDocument, Deal, DealSort } from './graphql/deals';
+import { ActiveDealsDocument, Deal } from './graphql/deals';
 import { queryRag, RagQueryResponse } from './services/ragClient';
 
 interface Filters {
@@ -23,9 +23,8 @@ function useActiveDealsFilters() {
 
 export default function App() {
   const { filters, setFilters, variables } = useActiveDealsFilters();
-  const [sortBy, setSortBy] = useState<DealSort>('NEWEST');
   const { data, loading, error, refetch } = useQuery(ActiveDealsDocument, {
-    variables: { ...variables, sortBy },
+    variables,
     notifyOnNetworkStatusChange: true,
   });
   const [insightPrompt, setInsightPrompt] = useState('What are the best deals today?');
@@ -37,7 +36,7 @@ export default function App() {
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    void refetch({ ...variables, sortBy });
+    void refetch(variables);
   };
 
   const handleInsightRequest = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -88,13 +87,6 @@ export default function App() {
               placeholder="500"
               onChange={(event) => setFilters((prev) => ({ ...prev, maxPrice: event.target.value }))}
             />
-          </label>
-          <label>
-            Sort by
-            <select value={sortBy} onChange={(event) => setSortBy(event.target.value as DealSort)}>
-              <option value="NEWEST">Newest first</option>
-              <option value="PRICE_ASC">Lowest price</option>
-            </select>
           </label>
           <button type="submit" disabled={loading}>
             {loading ? 'Loading...' : 'Apply filters'}

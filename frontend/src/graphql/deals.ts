@@ -1,8 +1,8 @@
 import { gql } from '@apollo/client';
 
 export const ActiveDealsDocument = gql`
-  query ActiveDeals($destination: String, $maxPrice: Float, $sortBy: DealSort) {
-    activeDeals(destination: $destination, maxPrice: $maxPrice, sortBy: $sortBy) {
+  query ActiveDeals($destination: String, $maxPrice: Float) {
+    activeDeals(destination: $destination, maxPrice: $maxPrice) {
       id
       destination
       price
@@ -23,5 +23,3 @@ export interface Deal {
 export interface ActiveDealsQueryResult {
   activeDeals: Deal[];
 }
-
-export type DealSort = 'NEWEST' | 'PRICE_ASC';
