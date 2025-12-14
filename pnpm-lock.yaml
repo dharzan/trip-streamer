@@ -109,6 +109,9 @@ importers:
       '@types/node':
         specifier: ^25.0.1
         version: 25.0.1
+      '@types/pg':
+        specifier: ^8.16.0
+        version: 8.16.0
       ts-node-dev:
         specifier: ^2.0.0
         version: 2.0.0(@types/node@25.0.1)(typescript@5.9.3)
