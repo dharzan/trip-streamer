@@ -12,8 +12,13 @@
     "dev:sqs-worker": "pnpm --filter sqs-worker dev",
     "dev:frontend": "pnpm --filter frontend dev",
     "dev:rag-assistant": "pnpm --filter rag-assistant dev",
+    "dev:nginx": "docker-compose up -d nginx",
     "dev:services": "concurrently --kill-others-on-fail --names \"backend,kafka-producer,kafka-consumer,sqs-worker,frontend,rag\" \"pnpm dev:backend\" \"pnpm dev:kafka-producer\" \"pnpm dev:kafka-consumer\" \"pnpm dev:sqs-worker\" \"pnpm dev:frontend\" \"pnpm dev:rag-assistant\"",
     "dev:stack": "pnpm infra:up && pnpm dev:services",
+    "proxy:dev": "bash scripts/proxy-dev.sh",
+    "proxy:prod": "bash scripts/proxy-prod.sh",
+    "docker:up": "docker-compose up -d frontend-app kafka-producer-app kafka-consumer-app sqs-worker-app backend-app rag-assistant-app",
+    "docker:down": "docker-compose down",
     "test:e2e": "pnpm --filter e2e test"
   },
   "devDependencies": {

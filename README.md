@@ -22,6 +22,16 @@ pnpm dev:kafka-consumer
 pnpm dev:sqs-worker
 pnpm dev:frontend      # Vite dev server (5173)
 pnpm dev:rag-assistant # RAG assistant (7070)
+pnpm dev:nginx         # optional: reverse proxy on http://localhost:8080
+
+# Convenience scripts for proxies
+pnpm proxy:dev         # shorthand for pnpm dev:nginx
+pnpm proxy:prod        # serve built frontend via Nginx on http://localhost:9090
+
+# Run the entire stack with Docker containers (builds each service image)
+pnpm docker:up
+# Tear everything down (containers + networks)
+pnpm docker:down
 ```
 
 Stop infra and clean up:
@@ -30,9 +40,32 @@ Stop infra and clean up:
 pnpm infra:down
 ```
 
+## Dockerized Stack
+Prefer containers instead of pnpm dev servers? Build and run every service (backend, workers, rag assistant, static frontend + reverse proxy) with a single command:
+
+```bash
+pnpm docker:up
+```
+
+This spins up:
+- Backend API (`http://localhost:4000`)
+- Kafka producer/consumer, SQS worker, rag assistant (internal services)
+- Static frontend served via Nginx (`http://localhost:8081`, proxies `/api` and `/rag`)
+
+When finished:
+
+```bash
+pnpm docker:down
+```
+
+> The same `docker-compose.yml` still powers infra-only workflows (`pnpm infra:up`), so you can mix & match.
+
 ## Ports & Endpoints
 - GraphQL (backend): `http://localhost:4000/` (playground printed on boot)
 - Frontend (Vite): `http://localhost:5173/`
+- Frontend (Dockerized): `http://localhost:8081/`
+- Nginx proxy (optional): `http://localhost:8080/` (proxies frontend + APIs)
+- Production preview proxy: `http://localhost:9090/` (serves built frontend + proxies APIs via `pnpm proxy:prod`)
 - Kafka broker: `localhost:9092`
 - LocalStack (SQS): `http://localhost:4566` (queue: `deals-alerts`)
 - Postgres: `postgres://tripstreamer:tripstreamer@localhost:5432/tripstreamer`
@@ -69,13 +102,17 @@ pnpm infra:down
 - `workers/sqs-worker`: consumes SQS, persists to Postgres, manages Redis cache + stats
 - `frontend/`: React + Apollo Client app powered by Vite
 - `services/rag-assistant/`: lightweight vector store + retrieval API for AI insights
+- `nginx/`: reverse-proxy configs (dev + prod)
+- Service-specific Dockerfiles live inside each package (e.g., `backend/Dockerfile`, `workers/*/Dockerfile`, `frontend/Dockerfile`, `services/rag-assistant/Dockerfile`) and are referenced by `docker-compose.yml`.
 - `e2e/`: Jest/Playwright tests (to be implemented)
 
 ## Root Scripts
--- `pnpm infra:up` / `pnpm infra:down`: docker-compose orchestration (Kafka, LocalStack SQS, Postgres, Redis)
--- `pnpm dev:stack`: start infra and all dev services together (convenience command)
--- `pnpm dev:backend`, `pnpm dev:kafka-producer`, `pnpm dev:kafka-consumer`, `pnpm dev:sqs-worker`, `pnpm dev:frontend`, `pnpm dev:rag-assistant`: service dev servers
--- `pnpm test:e2e`: placeholder for the cross-service Jest/Playwright suite
+- `pnpm infra:up` / `pnpm infra:down`: docker-compose orchestration (Kafka, LocalStack SQS, Postgres, Redis)
+- `pnpm dev:stack`: start infra and all dev services together (convenience command)
+- `pnpm dev:backend`, `pnpm dev:kafka-producer`, `pnpm dev:kafka-consumer`, `pnpm dev:sqs-worker`, `pnpm dev:frontend`, `pnpm dev:rag-assistant`, `pnpm dev:nginx`: individual dev servers/proxy
+- `pnpm proxy:dev`, `pnpm proxy:prod`: helper scripts for Nginx dev/prod proxies
+- `pnpm docker:up`, `pnpm docker:down`: build and run the entire stack using Docker containers (backend, workers, rag assistant, frontend)
+- `pnpm test:e2e`: placeholder for the cross-service Jest/Playwright suite
 
 ## Acceptance Criteria
 - Deals flow end-to-end and surface in the UI
@@ -116,5 +153,8 @@ Override any of these via `.env` files inside each service if needed.
 - `RAG_MAX_DOCS` controls how many documents are considered when ranking matches (default 5000)
 - `RAG_SERVICE_URL` (default `http://localhost:7070`) is read by the SQS worker when posting new deal summaries
 
+### Nginx proxy configuration
+- `nginx/dev.conf` proxies `/` → Vite dev server (`host.docker.internal:5173`), `/api/` → backend (`:4000`), and `/rag/` → rag-assistant (`:7070`). Run `pnpm proxy:dev` and visit `http://localhost:8080` to exercise the entire stack through one origin (great for testing CORS-free scenarios). On Linux ensure Docker supports the `host.docker.internal` alias; if not, update the `extra_hosts` entry or edit the config to point at your host IP.
+- `nginx/prod.conf` serves the built frontend from `/usr/share/nginx/html` and proxies APIs back to the host. Run `pnpm proxy:prod` after `pnpm --filter frontend build` to launch `trip_nginx_prod` (accessible at `http://localhost:9090`). Stop it with `docker rm -f trip_nginx_prod` when you’re finished.
+- `nginx/docker.conf` is baked into the Dockerized frontend image and proxies `/api` → `backend-app:4000` and `/rag` → `rag-assistant-app:7070` when running the full stack via `docker-compose`. The resulting site is exposed on `http://localhost:8081`.
 ---
-

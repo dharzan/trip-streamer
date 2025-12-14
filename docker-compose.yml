@@ -56,6 +56,115 @@ services:
     volumes:
       - redisdata:/data
 
+  backend-app:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    environment:
+      - PORT=4000
+      - PGHOST=postgres
+      - PGPORT=5432
+      - PGUSER=tripstreamer
+      - PGPASSWORD=tripstreamer
+      - PGDATABASE=tripstreamer
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - postgres
+      - redis
+    ports:
+      - "4000:4000"
+
+  kafka-producer-app:
+    build:
+      context: .
+      dockerfile: workers/kafka-producer/Dockerfile
+    environment:
+      - KAFKA_BROKERS=redpanda:9092
+      - KAFKA_DEAL_TOPIC=deals.raw
+      - PRODUCE_INTERVAL_MS=3000
+    depends_on:
+      - redpanda
+
+  kafka-consumer-app:
+    build:
+      context: .
+      dockerfile: workers/kafka-consumer/Dockerfile
+    environment:
+      - KAFKA_BROKERS=redpanda:9092
+      - KAFKA_DEAL_TOPIC=deals.raw
+      - KAFKA_CONSUMER_GROUP=tripstreamer-kafka-consumer
+      - MAX_ALERT_PRICE=500
+      - SQS_QUEUE_NAME=deals-alerts
+      - AWS_REGION=us-east-1
+      - AWS_ENDPOINT=http://localstack:4566
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+    depends_on:
+      - redpanda
+      - localstack
+
+  sqs-worker-app:
+    build:
+      context: .
+      dockerfile: workers/sqs-worker/Dockerfile
+    environment:
+      - SQS_QUEUE_NAME=deals-alerts
+      - AWS_REGION=us-east-1
+      - AWS_ENDPOINT=http://localstack:4566
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - PGHOST=postgres
+      - PGPORT=5432
+      - PGUSER=tripstreamer
+      - PGPASSWORD=tripstreamer
+      - PGDATABASE=tripstreamer
+      - REDIS_URL=redis://redis:6379
+      - EVENT_TTL_SECONDS=86400
+      - DEST_STATS_TTL=60
+      - RAG_SERVICE_URL=http://rag-assistant-app:7070
+    depends_on:
+      - localstack
+      - postgres
+      - redis
+      - rag-assistant-app
+
+  rag-assistant-app:
+    build:
+      context: .
+      dockerfile: services/rag-assistant/Dockerfile
+    environment:
+      - RAG_PORT=7070
+      - PGHOST=postgres
+      - PGPORT=5432
+      - PGUSER=tripstreamer
+      - PGPASSWORD=tripstreamer
+      - PGDATABASE=tripstreamer
+    depends_on:
+      - postgres
+    ports:
+      - "7070:7070"
+
+  frontend-app:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    depends_on:
+      - backend-app
+      - rag-assistant-app
+    ports:
+      - "8081:80"
+
+  nginx:
+    image: nginx:alpine
+    container_name: trip_nginx
+    depends_on: []
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx/dev.conf:/etc/nginx/conf.d/default.conf:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
 volumes:
   pgdata:
   redisdata:
